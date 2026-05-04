@@ -951,12 +951,8 @@ const filesWithPrefix = files.map(f => ({
   path: `${templateName}/${f.path}`
 }));
 
-await uploadProject(
-  filesWithPrefix,
-  nameValue,
-  window.Clerk?.user?.id,
-  templateName
-);
+await uploadProject(files, nameValue, window.Clerk?.user?.id, templateName);
+
 
     console.log("Publish: uploadProject invoked with", files.length, "files.");
     alert("Publish initiated. Check console for upload response.");
