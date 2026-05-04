@@ -637,46 +637,32 @@ function Minify() {
    ========================= */
 
 window.cleanDocumentForPublish = async function cleanDocumentForPublish() {
+  // Clone the whole document so we can safely mutate it
   const docClone = document.documentElement.cloneNode(true);
 
-  const selectorsToRemove = [
-    "#saveLoadContainer",
-    "#minifyBtn",
-    "#saveBtn",
-    "#loadBtn",
-    "#UploadBtn",
-    "input[type=file]",
-    "input#heroPicker",
-    "input[id^='imgPicker_']",
-    ".save-panel",
-    ".section-popup",
-    ".owl-nav",
-    ".owl-dots",
-    "#stripePaymentModal",
-    "#openedUI",
-    "#closedUI",
-  ];
-  selectorsToRemove.forEach((sel) => {
-    docClone.querySelectorAll(sel).forEach((n) => n.remove());
-  });
+  // Remove only elements that have the id "Revove"
+  // (querySelectorAll supports multiple matches even though id is normally unique)
+  docClone.querySelectorAll("#Remove").forEach(n => n.remove());
 
-  docClone.querySelectorAll("script").forEach((s) => {
-    if (s.id !== "RequiredScript") s.remove();
-  });
+  // If you previously removed scripts except RequiredScript, we no longer do that.
+  // However, if you want to remove script elements that specifically have id="Revove",
+  // the line above already removed them because it targets any element with that id.
 
+  // Clean attributes and editing helpers from all remaining elements
   const allElements = docClone.querySelectorAll("*");
-  allElements.forEach((el) => {
+  allElements.forEach(el => {
     el.removeAttribute("contenteditable");
     el.removeAttribute("data-cc-animate");
     el.removeAttribute("data-cc-animate-delay");
 
-    Array.from(el.attributes).forEach((attr) => {
+    Array.from(el.attributes).forEach(attr => {
       if (/^on/i.test(attr.name)) el.removeAttribute(attr.name);
     });
 
     el.classList.remove("editable-text", "lazyload--placeholder");
   });
 
+  // Ensure head exists and that style.css is linked
   let head = docClone.querySelector("head");
   if (!head) {
     head = document.createElement("head");
@@ -691,14 +677,15 @@ window.cleanDocumentForPublish = async function cleanDocumentForPublish() {
     head.appendChild(link);
   }
 
+  // Collect image srcs and rewrite src attributes to images/img_X.jpg
   const imgs = Array.from(docClone.querySelectorAll("img"));
-  const originalSrcs = imgs.map((img) => img.getAttribute("src") || "");
+  const originalSrcs = imgs.map(img => img.getAttribute("src") || "");
 
   imgs.forEach((img, i) => {
     img.setAttribute("src", `images/img_${i}.jpg`);
     img.removeAttribute("srcset");
 
-    Array.from(img.attributes).forEach((attr) => {
+    Array.from(img.attributes).forEach(attr => {
       if (/^data-/i.test(attr.name)) img.removeAttribute(attr.name);
     });
   });
@@ -706,6 +693,7 @@ window.cleanDocumentForPublish = async function cleanDocumentForPublish() {
   const cleanedHTML = "<!DOCTYPE html>\n" + docClone.outerHTML;
   return { cleanedHTML, originalSrcs };
 };
+
 
 function setUploadButtonState(state) {
   const btn = editorQuery("#UploadBtn") || document.getElementById("UploadBtn");
@@ -957,9 +945,18 @@ window.publish = async function publish() {
     // Example (uncomment to enable):
     // const filesWithPrefix = files.map(f => ({ ...f, path: `${templateName}/${f.path}` }));
     // await uploadProject(filesWithPrefix, nameValue, window.Clerk?.user?.id, templateName);
+     // Prefix all file paths with the template folder
+const filesWithPrefix = files.map(f => ({
+  ...f,
+  path: `${templateName}/${f.path}`
+}));
 
-    // Default: send files as-is and pass templateName as the template argument
-    await uploadProject(files, nameValue, window.Clerk?.user?.id, templateName);
+await uploadProject(
+  filesWithPrefix,
+  nameValue,
+  window.Clerk?.user?.id,
+  templateName
+);
 
     console.log("Publish: uploadProject invoked with", files.length, "files.");
     alert("Publish initiated. Check console for upload response.");
