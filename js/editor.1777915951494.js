@@ -483,7 +483,7 @@ function openImageEditor(targetImg, uploadedSrc) {
    ========================= */
 
 function enableTextEditing() {
-  const editableSelectors = [
+   const editableSelectors = [
     ".business_name",
     ".tagline",
     ".about_us p",
@@ -492,6 +492,8 @@ function enableTextEditing() {
     "h2",
     "h3",
     "h4",
+    "h5",
+    "h6",
     "p",
     "span",
   ];
