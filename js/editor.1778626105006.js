@@ -215,6 +215,33 @@ function createShadowEditorUI() {
   return { host: _editorHost, root: _editorRoot };
 }
 
+async function autoFillSiteName(userId) {
+  try {
+    const res = await fetch(`/api/repos?ID=${encodeURIComponent(userId)}`);
+    const data = await res.json();
+
+    if (!Array.isArray(data.repos) || data.repos.length === 0) return;
+
+    // Pick the most recently updated repo
+    const sorted = data.repos
+      .filter(r => r.repo)
+      .sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
+
+    if (sorted.length === 0) return;
+
+    const repoName = sorted[0].repo;
+
+    // Access shadow DOM input
+    const { root } = createShadowEditorUI();
+    const input = root.querySelector("#SiteName");
+
+    if (input && !input.value) {
+      input.value = repoName;
+    }
+  } catch (err) {
+    console.error("Failed to auto-fill site name:", err);
+  }
+}
 
 // Query helper: prefer shadow root, fallback to document
 function editorQuery(selector) {
@@ -1218,6 +1245,8 @@ async function waitForEditorUI(timeout = 5000) {
 
   // Create shadow UI early
   createShadowEditorUI();
+  
+
 
   // Load Clerk
   try {
@@ -1230,7 +1259,9 @@ async function waitForEditorUI(timeout = 5000) {
   // Load Stripe in background
   loadStripeModule().catch((err) => console.warn("Stripe background load failed:", err));
 
-
+if (window.Clerk?.user?.id) {
+  autoFillSiteName(window.Clerk?.user?.id);
+}
 
   // Initialize editor AFTER autoload
   initializeEditor();

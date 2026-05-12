@@ -31,16 +31,6 @@ function initTemplateNavSlider() {
   }
 }
 
-function showStoreNav() {
-  const nav = document.getElementById("store-nav");
-  if (nav) nav.style.display = "block";
-}
-
-function hideStoreNav() {
-  const nav = document.getElementById("store-nav");
-  if (nav) nav.style.display = "none";
-}
-
 // Mobile hamburger toggle
 document.addEventListener("DOMContentLoaded", () => {
   const toggle = document.getElementById("nav-toggle");
@@ -68,7 +58,6 @@ async function loadProducts() {
   if (window.previewMode) {
     console.log("Preview mode enabled — using default products.");
     wrapper.style.display = "block";
-    showStoreNav();
     return;
   }
 
@@ -82,7 +71,6 @@ async function loadProducts() {
     if (!res.ok) {
       console.warn("products.json not found — hiding store.");
       wrapper.style.display = "none";
-      hideStoreNav();
       return;
     }
 
