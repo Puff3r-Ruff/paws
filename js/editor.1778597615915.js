@@ -192,12 +192,13 @@ function createShadowEditorUI() {
 
         <div id="contentArea">
           <button class="btn btn-back" id="backToTemplates">
-            <a href="/BusinessHud" style="color:inherit;text-decoration:none;">Back to Templates</a>
+            <a href="/BusinessHud" style="color:inherit;text-decoration:none;display:block;">Business Hud</a>
           </button>
 
           <input id="SiteName" placeholder="Site name" />
 
           <button class="btn btn-update" id="UploadBtn">subscribe</button>
+          <button class="btn btn-update" id="previewStoreBtn">Preview Store</button>
         </div>
       </div>
     </div>
@@ -222,126 +223,6 @@ function editorQuery(selector) {
     if (el) return el;
   }
   return document.querySelector(selector);
-}
-/* =========================
-   Local Save / Load (24 hours)
-   ========================= */
-
-const LOCAL_KEY = "editor_local_backup_v1";
-
-let autosaveTimer = null;
-
-function scheduleAutosave() {
-  clearTimeout(autosaveTimer);
-  autosaveTimer = setTimeout(() => {
-    saveLocalBackup(true); // silent autosave
-  }, 800); // waits 0.8s after last change
-}
-
-function autoLoadIfExists() {
-  const raw = localStorage.getItem(LOCAL_KEY);
-  if (!raw) return;
-
-  const data = JSON.parse(raw);
-  const age = Date.now() - data.timestamp;
-
-  if (age > 24 * 60 * 60 * 1000) {
-    localStorage.removeItem(LOCAL_KEY);
-    return;
-  }
-
-  // Auto-load
-  loadLocalBackup();
-}
-
-async function saveLocalBackup(silent = false) {
-  const nameEl = editorQuery("#SiteName");
-  const siteName = nameEl?.value?.trim() || "";
-
-  const { cleanedHTML, originalSrcs } = await window.cleanDocumentForPublish();
-
-  const images = await Promise.all(
-    originalSrcs.map(async (src) => {
-      if (!src) return null;
-
-      if (src.startsWith("data:image")) {
-        return src;
-      }
-
-      try {
-        const resp = await fetch(src);
-        const blob = await resp.blob();
-        return "data:image/jpeg;base64," + (await blobToBase64(blob));
-      } catch {
-        return null;
-      }
-    })
-  );
-
-  const payload = {
-    url: window.location.pathname,   // ⭐ save the link
-    siteName,
-    cleanedHTML,
-    images,
-    timestamp: Date.now()
-  };
-
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(payload));
-
-  if (!silent) alert("Saved locally for 24 hours.");
-}
-
-
-function loadLocalBackup() {
-  const raw = localStorage.getItem(LOCAL_KEY);
-  if (!raw) {
-    alert("No saved version found.");
-    return;
-  }
-
-  const data = JSON.parse(raw);
-  const age = Date.now() - data.timestamp;
-
-  if (age > 24 * 60 * 60 * 1000) {
-    alert("Saved version expired (older than 24 hours).");
-    localStorage.removeItem(LOCAL_KEY);
-    return;
-  }
-
-  // If we are NOT on the saved URL → navigate there
-  if (window.location.pathname !== data.url) {
-    sessionStorage.setItem("editor_autoload", "1");
-    window.location.href = data.url;
-    return;
-  }
-
-  // If we ARE already on the saved URL → restore immediately
-  restoreBackupContent(data);
-}
-
-
-function restoreBackupContent(data) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(data.cleanedHTML, "text/html");
-
-  // Replace only the body
-  document.body.innerHTML = doc.body.innerHTML;
-
-  // Restore images
-  const imgs = document.querySelectorAll("img");
-  imgs.forEach((img, i) => {
-    if (data.images[i]) img.src = data.images[i];
-  });
-
-  // Restore site name
-  const nameEl = editorQuery("#SiteName") || document.getElementById("SiteName");
-  if (nameEl) nameEl.value = data.siteName || "";
-
-  // Recreate editor UI
-  createShadowEditorUI();
-  initializeEditor();
-
-  alert("Loaded saved version.");
 }
 
 
@@ -698,7 +579,6 @@ function openImageEditor(targetImg, uploadedSrc) {
         }
 
         targetImg.src = dataURL;
-        scheduleAutosave();
         overlay.remove();
         hint.remove();
       };
@@ -740,7 +620,6 @@ function enableTextEditing() {
      
     el.classList.add("editable-text");
     el.style.cursor = "text";
-    el.addEventListener("input", scheduleAutosave);
 
     el.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -787,6 +666,7 @@ function rebindButtons() {
   const arrow = editorQuery("#arrow");
 
   const uploadBtn = editorQuery("#UploadBtn");
+  const previewStoreBtn = editorQuery("#previewStoreBtn");
   const nameEl = editorQuery("#SiteName");
 
   // Slide panel open/close
@@ -799,7 +679,6 @@ function rebindButtons() {
   });
 
   // Autosave on name change
-  nameEl?.addEventListener("input", scheduleAutosave);
 
   // Upload button (same logic as before)
   uploadBtn?.addEventListener("click", async () => {
@@ -818,8 +697,17 @@ function rebindButtons() {
 
     await publish();
   });
-}
 
+previewStoreBtn?.addEventListener("click", async () => {
+  if (window.previewMode) {
+    window.previewMode = false;
+    loadProducts();
+  } else {
+    window.previewMode = true;
+    loadProducts();
+  }
+});
+}
 
 function Minify() {
   const panel = editorQuery("#sidePanel");
@@ -1342,32 +1230,6 @@ async function waitForEditorUI(timeout = 5000) {
   // Load Stripe in background
   loadStripeModule().catch((err) => console.warn("Stripe background load failed:", err));
 
-  // ============================
-  // AUTOLOAD BLOCK (corrected)
-  // ============================
-if (sessionStorage.getItem("editor_autoload") === "1") {
-  sessionStorage.removeItem("editor_autoload");
-
-  const raw = localStorage.getItem(LOCAL_KEY);
-  if (!raw) return;
-
-  const data = JSON.parse(raw);
-
-  // Check expiration
-  const age = Date.now() - data.timestamp;
-  if (age > 24 * 60 * 60 * 1000) {
-    localStorage.removeItem(LOCAL_KEY);
-    return;
-  }
-
-  // Only restore if URL matches
-  if (data.url === window.location.pathname) {
-    restoreBackupContent(data);
-
-    // After restoring, recreate Shadow UI
-    createShadowEditorUI();
-  }
-}
 
 
   // Initialize editor AFTER autoload

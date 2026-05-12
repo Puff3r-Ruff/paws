@@ -1,246 +1,1139 @@
 <!DOCTYPE html>
-<html lang="en"><head>
+<html><head>
     <meta charset="utf-8">
-    <title>Gymnast - Gym Website Template</title>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <meta content="Free Website Template" name="keywords">
-    <meta content="Free Website Template" name="description">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Luxury Florist</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&amp;family=Poppins:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+    
+<script>
 
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+function initTemplateNavSlider() {
+  let templateNavIndex = 0;
+  const templateNavCards = document.querySelectorAll(".template-card");
+  const templateNavPrev = document.querySelector(".templateNav-left");
+  const templateNavNext = document.querySelector(".templateNav-right");
 
-    <!-- Flaticon Font -->
-    <link href="lib/flaticon/font/flaticon.css" rel="stylesheet">
+  if (!templateNavCards.length) return;
 
-    <!-- Customized Bootstrap Stylesheet -->
-    <link href="css/style.min.1778597082179.css" rel="stylesheet">
-    <link href="css/style.1778597082179.css" rel="stylesheet">
-     
-<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js" async="" crossorigin="anonymous" data-clerk-publishable-key="pk_live_Y2xlcmsuaWRlYWdvLmllJA"></script><script src="https://js.stripe.com/dahlia/stripe.js"></script></head>
+  function templateNavShowCard(i) {
+    templateNavCards.forEach(c => c.classList.remove("active"));
+    templateNavCards[i].classList.add("active");
+  }
 
-<body class="bg-white">
-    <!-- Navbar Start -->
-    <div class="container-fluid p-0 nav-bar">
-        <nav class="navbar navbar-expand-lg bg-none navbar-dark py-3">
-            <a href="" class="navbar-brand">
-                <h1 class="m-0 display-4 font-weight-bold text-uppercase text-white" style="cursor: text;">Gymnast</h1>
-            </a>
-        </nav>
+  if (templateNavPrev && templateNavNext) {
+    templateNavNext.onclick = () => {
+      templateNavIndex = (templateNavIndex + 1) % templateNavCards.length;
+      templateNavShowCard(templateNavIndex);
+    };
+
+    templateNavPrev.onclick = () => {
+      templateNavIndex = (templateNavIndex - 1 + templateNavCards.length) % templateNavCards.length;
+      templateNavShowCard(templateNavIndex);
+    };
+
+    setInterval(() => {
+      templateNavIndex = (templateNavIndex + 1) % templateNavCards.length;
+      templateNavShowCard(templateNavIndex);
+    }, 3000);
+  }
+}
+
+function showStoreNav() {
+  const nav = document.getElementById("store-nav");
+  if (nav) nav.style.display = "block";
+}
+
+function hideStoreNav() {
+  const nav = document.getElementById("store-nav");
+  if (nav) nav.style.display = "none";
+}
+
+// Mobile hamburger toggle
+document.addEventListener("DOMContentLoaded", () => {
+  const toggle = document.getElementById("nav-toggle");
+  const links = document.getElementById("nav-links");
+
+  if (toggle && links) {
+    toggle.addEventListener("click", () => {
+      links.classList.toggle("show");
+    });
+  }
+});
+
+async function loadProducts() {
+  const wrapper = document.querySelector(".templateNav-wrapper");
+  const list = document.querySelector(".template-list");
+
+  if (!wrapper || !list) {
+    console.error("Wrapper or list not found in DOM.");
+    return;
+  }
+
+  /* ---------------------------------------------------
+     1) PREVIEW MODE → ALWAYS SHOW DEFAULT PRODUCTS + NAV
+  --------------------------------------------------- */
+  if (window.previewMode) {
+    console.log("Preview mode enabled — using default products.");
+    wrapper.style.display = "block";
+    showStoreNav();
+    return;
+  }
+
+  /* ---------------------------------------------------
+     2) NORMAL MODE → TRY LOADING products.json
+  --------------------------------------------------- */
+  try {
+    const res = await fetch("Products/products.json");
+
+    // JSON missing → hide wrapper + hide nav
+    if (!res.ok) {
+      console.warn("products.json not found — hiding store.");
+      wrapper.style.display = "none";
+      hideStoreNav();
+      return;
+    }
+
+    // JSON exists → show wrapper + show nav
+    wrapper.style.display = "block";
+    showStoreNav();
+
+    const data = await res.json();
+    const products = data.products ?? [];
+
+    list.innerHTML = "";
+
+    products.forEach((p) => {
+      const lowestVariant = p.variants?.length
+        ? p.variants.reduce((min, v) => (v.price < min.price ? v : min))
+        : null;
+
+      const price = lowestVariant ? lowestVariant.price : p.basePrice ?? "N/A";
+
+      const card = document.createElement("div");
+      card.className = "template-card";
+
+      card.innerHTML = `
+        <img src="${p.image}" alt="">
+        <h3>${p.name}</h3>
+        <p>${p.description}</p>
+        <div class="price">€${price}</div>
+        <a class="btn" href="#">Add To Cart</a>
+      `;
+
+      list.appendChild(card);
+    });
+
+    initTemplateNavSlider();
+
+  } catch (err) {
+    console.error("Error loading products:", err);
+    wrapper.style.display = "none";
+    hideStoreNav();
+  }
+}
+
+    document.addEventListener("DOMContentLoaded", () => {
+  // Make preview mode globally accessible
+  const urlParams = new URLSearchParams(window.location.search);
+  window.previewMode = urlParams.get("preview") === "true";
+
+  loadProducts();
+});
+</script>
+    
+<style>
+
+/* -------------------- GLOBAL -------------------- */
+
+body{
+    margin: 0;
+    font-family: "Poppins", sans-serif;
+    background: #ffffff;
+    color: #333;
+    overflow-x: hidden;
+}
+
+h1, h2, h3, h4{
+    font-family: "Playfair Display", serif;
+    letter-spacing: 0.5px;
+}
+
+:root{
+    --gold: #C9A86A;
+    --soft-pink: #F7EFEA;
+    --dark: #2E2E2E;
+}
+
+/* Fade-in animation */
+.fade-in{
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeIn 1.2s ease forwards;
+}
+
+@keyframes fadeIn{
+    to{
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* -------------------- SECTION TITLES -------------------- */
+
+.section-title{
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.section-title h2{
+    font-size: 2.4rem;
+    color: var(--dark);
+    margin-bottom: 10px;
+}
+
+.section-title .line{
+    width: 80px;
+    height: 3px;
+    background: var(--gold);
+    margin: 0 auto;
+    border-radius: 2px;
+}
+
+/* -------------------- NAV -------------------- */
+
+nav{
+    width: 100%;
+    height: 55px;
+    position: relative;
+    background: white;
+    border-bottom: 1px solid #eee;
+    overflow: hidden;
+    z-index: 9999;
+}
+
+nav h4{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    font-size: 1.05rem;
+    margin: 0;
+    color: var(--dark);
+}
+
+nav h4.active{
+    opacity: 1;
+}
+
+.arrow{
+    display: block;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 24px;
+    padding: 5px 10px;
+    cursor: pointer;
+    opacity: 0.5;
+    z-index: 20;
+    color: var(--gold);
+    user-select: none;
+    transition: opacity 0.3s ease;
+}
+
+.arrow:hover{
+    opacity: 1;
+}
+
+.left-arrow{ left: 20px; }
+.right-arrow{ right: 20px; }
+
+/* -------------------- HERO -------------------- */
+
+/* -------------------- HERO -------------------- */
+
+#hero{
+    position: relative;
+    width: 100%;
+    height: 80vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    pointer-events: none;
+}
+
+/* The hero image behaves like background-size: cover */
+#hero .hero-bg{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: heroZoom 18s ease-in-out infinite alternate;
+    z-index: 1;
+    pointer-events: fill;
+}
+
+/* Zoom animation */
+@keyframes heroZoom{
+    from{ transform: scale(1); }
+    to{ transform: scale(1.08); }
+}
+
+/* Gradient overlay */
+#hero::after{
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        rgba(0,0,0,0.25),
+        rgba(0,0,0,0.55)
+    );
+    z-index: 2;
+}
+
+/* Text box */
+#hero .hero-text{
+    position: relative;
+    z-index: 3;
+    background: rgba(255,255,255,0.85);
+    padding: 40px 60px;
+    border-radius: 12px;
+    color: var(--dark);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+    max-width: 650px;
+    pointer-events: fill;
+}
+
+#hero h2{
+    margin: 0;
+    font-size: 2.8rem;
+    color: var(--gold);
+}
+
+#hero p{
+    margin-top: 12px;
+    font-size: 1.25rem;
+}
+
+
+/* -------------------- ABOUT SECTION -------------------- */
+
+#about{
+    width: 100%;
+    padding: 30px 0;
+    text-align: center;
+    position: relative;
+    background: var(--soft-pink);
+}
+
+.about-wrapper{
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    position: relative;
+}
+
+.about-tab{
+    width: 30%;
+    background: white;
+    padding: 35px;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    transition: box-shadow 0.3s ease, border 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.about-tab:hover{
+    box-shadow: 0 14px 35px rgba(0,0,0,0.18);
+    border: 2px solid var(--gold);
+}
+
+.about-tab img{
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.about-tab h2{
+    color: var(--gold);
+    margin-bottom: 10px;
+    font-size: 1.6rem;
+}
+
+/* ABOUT ARROWS */
+.about-arrow{
+    display: none;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 40px;
+    padding: 10px 15px;
+    cursor: pointer;
+    opacity: 0.4;
+    user-select: none;
+    z-index: 50;
+    color:#fff;
+    transition: opacity 0.3s ease;
+}
+
+.about-arrow:hover{
+    opacity: 1;
+}
+
+.about-left{ left: 20px; }
+.about-right{ right: 20px; }
+
+/* -------------------- GALLERY -------------------- */
+
+#gallery{
+    width: 100%;
+    padding: 60px 0;
+    background: #fff;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+#gallery img{
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+}
+
+/* MOBILE: 2×2 grid */
+@media (max-width: 600px){
+    #gallery{
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 30px 0px;
+    }
+
+    #gallery img{
+        height: 180px;
+    }
+}
+
+/* -------------------- NEWSLETTER -------------------- */
+
+#newsletter{
+    width: 100%;
+    padding: 20px 0;
+    background: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.newsletter-inner{
+    background:#fff;
+    padding: 50px 60px;
+    border-radius: 16px;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.12);
+    text-align: center;
+    width: 90%;
+}
+
+#newsletter h2{
+    font-size: 2.2rem;
+    color: var(--gold);
+    margin-bottom: 10px;
+}
+
+#newsletter p{
+    font-size: 1.1rem;
+    color: var(--dark);
+    margin-bottom: 25px;
+}
+
+.newsletter-form{
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.newsletter-form input{
+    padding: 14px 5px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    width: 65%;
+    font-size: 1rem;
+}
+
+.newsletter-form button{
+    padding: 14px 22px;
+    background: var(--gold);
+    border: none;
+    color: white;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.newsletter-form button:hover{
+    background: #b89455;
+}
+
+/* Mobile newsletter */
+@media (max-width: 600px){
+    .newsletter-inner{
+        padding: 40px 25px;
+    }
+
+    .newsletter-form{
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .newsletter-form input{
+        width: 100%;
+    }
+}
+
+/* -------------------- CONTACT SECTION -------------------- */
+
+#contact{
+    width: 100%;
+    padding: 40px 0;
+    background: var(--soft-pink);
+    display: flex;
+    justify-content: center;
+}
+
+.contact-inner{
+    background: white;
+    padding: 60px;
+    border-radius: 16px;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.12);
+    max-width: 900px;
+    width: 90%;
+    display: flex;
+    gap: 40px;
+}
+
+.contact-info{
+    width: 50%;
+}
+
+.contact-info h2{
+    font-size: 2.2rem;
+    color: var(--gold);
+    margin-bottom: 10px;
+}
+
+.contact-info p{
+    font-size: 1.1rem;
+    color: var(--dark);
+    margin-bottom: 15px;
+}
+
+.contact-details p{
+    margin: 8px 0;
+    font-size: 1rem;
+}
+
+.contact-form{
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.contact-form input,
+.contact-form textarea{
+    width: 100%;
+    padding: 14px 5px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+.contact-form textarea{
+    height: 140px;
+    resize: none;
+}
+
+.contact-form button{
+    padding: 14px 22px;
+    background: var(--gold);
+    border: none;
+    color: white;
+    font-size: 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.contact-form button:hover{
+    background: #b89455;
+}
+
+/* MOBILE */
+@media (max-width: 600px){
+
+    .contact-inner{
+        flex-direction: column;
+        padding: 40px 25px;
+    }
+
+    .contact-info,
+    .contact-form{
+        width: 100%;
+    }
+}
+
+
+/* -------------------- ABOUT MOBILE FIX -------------------- */
+
+@media (max-width: 600px){
+
+    .about-wrapper{
+        display: block !important;
+        position: relative !important;
+        height: 410px !important;
+        width: 100% !important;
+        overflow: hidden !important;
+    }
+
+    .about-tab{
+        width: 92% !important;
+        padding: 20px !important;
+        position: absolute !important;
+        left: 50% !important;
+        top: 20px !important;
+        transform: translateX(-50%) !important;
+        opacity: 0 !important;
+        transition: opacity 0.5s ease !important;
+    }
+
+    .about-tab img{
+        height: 200px !important;
+    }
+
+    .about-tab.active{
+        opacity: 1 !important;
+    }
+
+    .about-arrow{
+        display: block !important;
+        font-size: 34px !important;
+        opacity: 0.8 !important;
+        z-index: 999 !important;
+    }
+}
+
+/* Store Nav */
+.store-nav {
+  width: 100%;
+  background: #111;
+  padding: 12px 20px;
+  color: #fff;
+  font-family: Poppins, sans-serif;
+}
+
+.store-nav .nav-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.store-nav .nav-logo {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.store-nav .nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.store-nav .nav-links a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+/* Mobile */
+.nav-toggle {
+  display: none;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+@media (max-width: 700px) {
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    background: #111;
+    padding: 10px 0;
+  }
+
+  .nav-links.show {
+    display: flex;
+  }
+
+  .nav-toggle {
+    display: block;
+  }
+}
+
+/* Store Nav */
+.store-nav {
+  width: 100%;
+  background: #111;
+  padding: 12px 20px;
+  color: #fff;
+  font-family: Poppins, sans-serif;
+  height: unset;
+}
+
+.store-nav .nav-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.store-nav .nav-logo {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.store-nav .nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.store-nav .nav-links a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+/* Mobile */
+.nav-toggle {
+  display: none;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+@media (max-width: 700px) {
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    background: #111;
+    padding: 10px 0;
+  }
+
+  .nav-links.show {
+    display: flex;
+  }
+
+  .nav-toggle {
+    display: block;
+  }
+}
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js" async="" crossorigin="anonymous" data-clerk-publishable-key="pk_live_Y2xlcmsuaWRlYWdvLmllJA"></script><script src="https://js.stripe.com/dahlia/stripe.js"></script><link rel="stylesheet" href="style.css"></head>
+
+<body>
+<!-- Dynamic Store Navigation -->
+<nav id="store-nav" class="store-nav" style="display:none;">
+  <div class="nav-inner">
+
+    <!-- Hamburger -->
+    <div class="nav-toggle" id="nav-toggle">
+      ☰
     </div>
-    <!-- Navbar End -->
 
-    <!-- Carousel Start -->
-    <div class="container-fluid p-0">
-        <div id="blog-carousel" class="carousel slide pointer-event" data-ride="carousel">
-            <div class="carousel-inner">
-                <div class="carousel-item">
-                    <img class="w-100" src="images/img_0.1778597082179.jpg" alt="Image" style="cursor: pointer;">
-                    <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
-                        <h3 class="text-primary text-capitalize m-0" style="cursor: text;">Gym &amp; Fitness Center</h3>
-                        <h2 class="display-2 m-0 mt-2 mt-md-4 text-white font-weight-bold text-capitalize" style="cursor: text;">Best Gym In Town</h2>
-                    </div>
-                </div>
-                <div class="carousel-item active">
-                    <img class="w-100" src="images/img_1.1778597082179.jpg" alt="Image" style="cursor: pointer;">
-                    <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
-                        <h3 class="text-primary text-capitalize m-0" style="cursor: text;">Gym &amp; Fitness Center</h3>
-                        <h2 class="display-2 m-0 mt-2 mt-md-4 text-white font-weight-bold text-capitalize" style="cursor: text;">Get Body In Shape</h2>
-                    </div>
-                </div>
-            </div>
-            <a class="carousel-control-prev" href="#blog-carousel" data-slide="prev">
-                <span class="carousel-control-prev-icon" style="cursor: text;"></span>
-            </a>
-            <a class="carousel-control-next" href="#blog-carousel" data-slide="next">
-                <span class="carousel-control-next-icon" style="cursor: text;"></span>
-            </a>
-        </div>
+    <!-- Nav links -->
+    <div class="nav-links" id="nav-links">
+      <a href="index.html">Home</a>
+      <a href="storeFront.html">Store</a>
     </div>
-    <!-- Carousel End -->
+  </div>
+</nav>
 
 
-    <!-- Gym Class Start -->
-    <div class="container gym-class mb-5">
-        <div class="row px-3">
-            <div class="col-md-6 p-0">
-                <div class="gym-class-box d-flex flex-column align-items-end justify-content-center bg-primary text-right text-white py-5 px-5">
-                    <i class="flaticon-six-pack"></i>
-                    <h3 class="display-4 mb-3 text-white font-weight-bold" style="cursor: text;">Body Building</h3>
-                    <p class="" style="cursor: text;">
-                        Lorem justo tempor sit aliquyam invidunt, amet vero ea dolor ipsum ut diam sit dolores, dolor
-                        sit eos sea sanctus erat lorem nonumy sanctus takimata. Kasd amet sit sadipscing at..
-                    </p>
-                </div>
-            </div>
-            <div class="col-md-6 p-0">
-                <div class="gym-class-box d-flex flex-column align-items-start justify-content-center bg-secondary text-left text-white py-5 px-5">
-                    <i class="flaticon-bodybuilding"></i>
-                    <h3 class="display-4 mb-3 text-white font-weight-bold" style="cursor: text;">Muscle Building</h3>
-                    <p class="" style="cursor: text;">
-                        Lorem justo tempor sit aliquyam invidunt, amet vero ea dolor ipsum ut diam sit dolores, dolor
-                        sit eos sea sanctus erat lorem nonumy sanctus takimata. Kasd amet sit sadipscing at..
-                    </p>
-                </div>
-            </div>
-        </div>
+<!-- nav section -->
+<nav>
+    <div class="arrow left-arrow">❮</div>
+    <div class="arrow right-arrow">❯</div>
+
+    <h4 class="slide" style="cursor: text;">Email: info@florist.com</h4>
+    <h4 class="slide" style="cursor: text;">Phone: 000 000 000</h4>
+    <h4 class="slide active" style="cursor: text;">Location: Cork</h4>
+</nav>
+
+<!-- hero section -->
+<!-- hero section -->
+<div id="hero">
+    <img class="hero-bg" src="images/img_0.1778597615915.jpg" alt="Luxury Florist Hero" style="cursor: pointer;">
+
+    <div class="hero-text fade-in">
+        <h2 class="" style="cursor: text;">Luxury Floral Design</h2>
+        <p class="" style="cursor: text;">Hand‑crafted arrangements for weddings, events &amp; special moments</p>
     </div>
-    <!-- Gym Class End -->
+</div>
 
 
-    <!-- About Start -->
-    <div class="container py-5">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <img class="img-fluid mb-4 mb-lg-0" src="images/img_2.1778597082179.jpg" alt="Image" style="cursor: pointer;">
-            </div>
-            <div class="col-lg-6">
-                <h2 class="display-4 font-weight-bold mb-4" style="cursor: text;">10 Years Experience</h2>
-                <p class="" style="cursor: text;">Labore vero lorem eos sed aliquy ipsum aliquy sed. Vero dolore dolore takima ipsum lorem rebum</p>
-                <div class="row py-2">
-                    <div class="col-sm-6">
-                        <i class="flaticon-barbell display-2 text-primary"></i>
-                        <h4 class="font-weight-bold" style="cursor: text;">Certified GYM Center</h4>
-                        <p class="" style="cursor: text;">Ipsum sanctu dolor ipsum dolore sit et kasd duo</p>
-                    </div>
-                    <div class="col-sm-6">
-                        <i class="flaticon-medal display-2 text-primary"></i>
-                        <h4 class="font-weight-bold" style="cursor: text;">Award Winning</h4>
-                        <p class="" style="cursor: text;">Ipsum sanctu dolor ipsum dolore sit et kasd duo</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- about us section -->
+<div id="about">
+
+    <div class="section-title fade-in">
+        <h2 class="" style="cursor: text;">Our Expertise</h2>
+        <div class="line"></div>
     </div>
-    <!-- About End -->
 
+    <div class="about-arrow about-left">❮</div>
+    <div class="about-arrow about-right">❯</div>
 
-    <!-- Features Start -->
-    <div class="container-fluid my-5">
-        <div class="row">
-            <div class="col-lg-4 p-0">
-                <div class="d-flex align-items-center bg-secondary text-white px-5" style="min-height: 300px;">
-                    <i class="flaticon-training display-3 text-primary mr-3"></i>
-                    <div class="">
-                        <h2 class="text-white mb-3" style="cursor: text;">Progression</h2>
-                        <p class="" style="cursor: text;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eu suscipit orci velit id libero
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4 p-0">
-                <div class="d-flex align-items-center bg-primary text-white px-5" style="min-height: 300px;">
-                    <i class="flaticon-weightlifting display-3 text-secondary mr-3"></i>
-                    <div class="">
-                        <h2 class="text-white mb-3" style="cursor: text;">Workout</h2>
-                        <p class="" style="cursor: text;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eu suscipit orci velit id libero
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4 p-0">
-                <div class="d-flex align-items-center bg-secondary text-white px-5" style="min-height: 300px;">
-                    <i class="flaticon-treadmill display-3 text-primary mr-3"></i>
-                    <div class="">
-                        <h2 class="text-white mb-3" style="cursor: text;">Nutrition</h2>
-                        <p class="" style="cursor: text;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eu suscipit orci velit id libero
-                        </p>
-                    </div>
-                </div>
-            </div>
+    <div class="about-wrapper">
+
+        <div class="about-tab fade-in">
+            <img src="images/img_1.1778597615915.jpg" style="cursor: pointer;">
+            <h2 class="" style="cursor: text;">Wedding Florals</h2>
+            <p class="" style="cursor: text;">Elegant bouquets, arches &amp; centerpieces designed to elevate your big day.</p>
         </div>
+
+        <div class="about-tab fade-in">
+            <img src="images/img_2.1778597615915.jpg" style="cursor: pointer;">
+            <h2 class="" style="cursor: text;">Event Styling</h2>
+            <p class="" style="cursor: text;">Luxury floral styling for corporate events, launches &amp; celebrations.</p>
+        </div>
+
+        <div class="about-tab fade-in active">
+            <img src="images/img_3.1778597615915.jpg" style="cursor: pointer;">
+            <h2 class="" style="cursor: text;">Bespoke Bouquets</h2>
+            <p class="" style="cursor: text;">Hand‑crafted arrangements tailored to your style, mood &amp; occasion.</p>
+        </div>
+
     </div>
-    <!-- Features End -->
 
+</div>
 
-    <!-- GYM Feature Start -->
-    <div class="container feature pt-5">
-        <div class="d-flex flex-column text-center mb-5">
-            <h4 class="text-primary font-weight-bold" style="cursor: text;">Why Choose Us?</h4>
-            <h4 class="display-4 font-weight-bold" style="cursor: text;">Benifits of Joining Our GYM</h4>
-        </div>
-        <div class="row">
-            <div class="col-md-6 mb-5">
-                <div class="row align-items-center">
-                    <div class="col-sm-5">
-                        <img class="img-fluid mb-3 mb-sm-0" src="images/img_3.1778597082179.jpg" alt="Image" style="cursor: pointer;">
-                        <i class="flaticon-barbell"></i>
-                    </div>
-                    <div class="col-sm-7">
-                        <h4 class="font-weight-bold" style="cursor: text;">Videos Instruction</h4>
-                        <p class="" style="cursor: text;">Sit lorem ipsum et diam elitr est dolor sed duo. Guberg sea et et lorem dolor sed est sit invidunt, dolore tempor diam ipsum takima  erat tempor</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 mb-5">
-                <div class="row align-items-center">
-                    <div class="col-sm-5">
-                        <img class="img-fluid mb-3 mb-sm-0" src="images/img_4.1778597082179.jpg" alt="Image" style="cursor: pointer;">
-                        <i class="flaticon-training"></i>
-                    </div>
-                    <div class="col-sm-7">
-                        <h4 class="font-weight-bold" style="cursor: text;">Training Calendar</h4>
-                        <p class="" style="cursor: text;">Sit lorem ipsum et diam elitr est dolor sed duo. Guberg sea et et lorem dolor sed est sit invidunt, dolore tempor diam ipsum takima  erat tempor</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 mb-5">
-                <div class="row align-items-center">
-                    <div class="col-sm-5">
-                        <img class="img-fluid mb-3 mb-sm-0" src="images/img_5.1778597082179.jpg" alt="Image" style="cursor: pointer;">
-                        <i class="flaticon-trends"></i>
-                    </div>
-                    <div class="col-sm-7">
-                        <h4 class="font-weight-bold" style="cursor: text;">Free Apps &amp; WiFi</h4>
-                        <p class="" style="cursor: text;">Sit lorem ipsum et diam elitr est dolor sed duo. Guberg sea et et lorem dolor sed est sit invidunt, dolore tempor diam ipsum takima  erat tempor</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 mb-5">
-                <div class="row align-items-center">
-                    <div class="col-sm-5">
-                        <img class="img-fluid mb-3 mb-sm-0" src="images/img_6.1778597082179.jpg" alt="Image" style="cursor: pointer;">
-                        <i class="flaticon-support"></i>
-                    </div>
-                    <div class="col-sm-7">
-                        <h4 class="font-weight-bold" style="cursor: text;">Community Support</h4>
-                        <p class="" style="cursor: text;">Sit lorem ipsum et diam elitr est dolor sed duo. Guberg sea et et lorem dolor sed est sit invidunt, dolore tempor diam ipsum takima  erat tempor</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- gallery -->
+<div id="gallery">
+    <img src="images/img_4.1778597615915.jpg" style="cursor: pointer;">
+    <img src="images/img_5.1778597615915.jpg" style="cursor: pointer;">
+    <img src="images/img_6.1778597615915.jpg" style="cursor: pointer;">
+    <img src="images/img_7.1778597615915.jpg" style="cursor: pointer;">
+</div>
+<!-- Store Snippet Start -->
+<div class="templateNav-wrapper" style="display: none;">
+  <div class="template-list">
+
+    <div class="template-card">
+      <img src="images/img_8.1778597615915.jpg" alt="" style="cursor: pointer;">
+      <h3 class="" style="cursor: text;">Your Product</h3>
+      <p class="" style="cursor: text;">Your Product Description</p>
+      <div class="price">€29</div>
+      <a class="btn" href="#">Add To Cart</a>
     </div>
-    <!-- GYM Feature End -->
 
+    <div class="template-card">
+      <img src="images/img_9.1778597615915.jpg" alt="" style="cursor: pointer;">
+      <h3 class="" style="cursor: text;">Your Product</h3>
+      <p class="" style="cursor: text;">Your Product Description</p>
+      <div class="price">€19</div>
+      <a class="btn" href="#">Add To Cart</a>
+    </div>
 
-    <!-- Subscribe Start -->
-    <div class="subscribe container-fluid my-5 py-5 text-center">
-        <h4 class="display-4 text-white font-weight-bold mt-5 mb-3" style="cursor: text;">Subscribe Our Newsletter</h4>
-        <p class="text-white mb-4" style="cursor: text;">Subscribe and get Our latest article in your inbox</p>
-        <form class="form-inline justify-content-center mb-5">
-            <div class="input-group">
-                <input type="text" class="form-control-lg" placeholder="Your Email">
-                <div class="input-group-append">
-                    <button class="btn btn-primary" type="submit">Subscribe</button>
-                </div>
-            </div>
+    <div class="template-card active">
+      <img src="images/img_10.1778597615915.jpg" alt="" style="cursor: pointer;">
+      <h3 class="" style="cursor: text;">Your Product</h3>
+      <p class="" style="cursor: text;">Your Product Description</p>
+      <div class="price">€39</div>
+      <a class="btn" href="#">Add To Cart</a>
+    </div>
+
+    <div class="template-card">
+      <img src="images/img_11.1778597615915.jpg" alt="" style="cursor: pointer;">
+      <h3 class="" style="cursor: text;">Your Product</h3>
+      <p class="" style="cursor: text;">Your Product Description</p>
+      <div class="price">€19</div>
+      <a class="btn" href="#">Add To Cart</a>
+    </div>
+
+    <div class="template-card">
+      <img src="images/img_12.1778597615915.jpg" alt="" style="cursor: pointer;">
+      <h3 class="" style="cursor: text;">Your Product</h3>
+      <p class="" style="cursor: text;">Your Product Description</p>
+      <div class="price">€39</div>
+      <a class="btn" href="#">Add To Cart</a>
+    </div>
+
+  </div>
+
+  <!-- MOBILE ARROWS (renamed to avoid conflicts) -->
+  <button class="templateNav-arrow templateNav-left">❮</button>
+  <button class="templateNav-arrow templateNav-right">❯</button>
+</div>
+
+<style>
+.templateNav-wrapper {
+  position: relative;
+  background: #eee;
+  padding: 1rem;
+}
+
+/* DESKTOP LAYOUT */
+.template-list {
+  display: flex;
+  gap: 25px;
+  justify-content: center;
+}
+
+.template-card {
+  width: 300px;
+  background: #222;
+  border-radius: 14px;
+  padding: 14px;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+  transition: transform .4s ease, box-shadow .4s ease, opacity .4s ease;
+  opacity: 0.6;
+}
+
+.template-card.active {
+  transform: scale(1.05);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+  opacity: 1;
+}
+
+.template-card img {
+  width: 100%;
+  height: 272px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.price {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 8px 0;
+  color: #4ade80;
+}
+
+.btn {
+  display: inline-block;
+  padding: 8px 14px;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: .85rem;
+}
+
+/* MOBILE MODE */
+@media (max-width: 600px) {
+  .template-list {
+    display: block;
+    position: relative;
+    height: 500px;
+    overflow: hidden;
+  }
+
+  .template-card {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 90%;
+    transform: translateX(-50%);
+    opacity: 0;
+  }
+
+  .template-card.active {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.02);
+  }
+
+  /* RENAMED ARROWS */
+  .templateNav-arrow {
+    display: block;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    font-size: 26px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 10;
+  }
+
+  .templateNav-left { left: 10px; }
+  .templateNav-right { right: 10px; }
+}
+
+/* HIDE ARROWS ON DESKTOP */
+@media (min-width: 601px) {
+  .templateNav-arrow { display: none; }
+}
+</style>
+
+<script>
+let templateNavIndex = 0;
+const templateNavCards = document.querySelectorAll(".template-card");
+const templateNavPrev = document.querySelector(".templateNav-left");
+const templateNavNext = document.querySelector(".templateNav-right");
+
+function templateNavShowCard(i) {
+  templateNavCards.forEach(c => c.classList.remove("active"));
+  templateNavCards[i].classList.add("active");
+}
+
+if (templateNavPrev && templateNavNext) {
+  templateNavNext.addEventListener("click", () => {
+    templateNavIndex = (templateNavIndex + 1) % templateNavCards.length;
+    templateNavShowCard(templateNavIndex);
+  });
+
+  templateNavPrev.addEventListener("click", () => {
+    templateNavIndex = (templateNavIndex - 1 + templateNavCards.length) % templateNavCards.length;
+    templateNavShowCard(templateNavIndex);
+  });
+
+  setInterval(() => {
+    templateNavIndex = (templateNavIndex + 1) % templateNavCards.length;
+    templateNavShowCard(templateNavIndex);
+  }, 3000);
+}
+</script>
+<!-- Store Snippet End -->
+
+<!-- newsletter section -->
+<div id="newsletter">
+    <div class="newsletter-inner fade-in">
+        <h2 class="" style="cursor: text;">Join Our Newsletter</h2>
+        <p class="" style="cursor: text;">Be the first to receive exclusive floral offers, seasonal collections &amp; event updates.</p>
+
+        <form class="newsletter-form">
+            <input type="email" placeholder="Enter your email address" required="">
+            <button type="submit">Subscribe</button>
         </form>
     </div>
-    <!-- Subscribe End -->
+</div>
 
-    <!-- JavaScript Libraries -->
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
-    <script src="lib/easing/easing.min.js"></script>
-    <script src="lib/waypoints/waypoints.min.js"></script>
+<!-- contact section -->
+<div id="contact">
+    <div class="contact-inner fade-in">
 
-    <!-- Contact Javascript File -->
-    <script src="mail/jqBootstrapValidation.min.js"></script>
-    <script src="mail/contact.js"></script>
+        <div class="contact-info">
+            <h2 class="" style="cursor: text;">Contact Us</h2>
+            <p class="" style="cursor: text;">We’d love to hear from you. Whether you're planning a wedding, event, or looking for something bespoke — our team is here to help.</p>
 
-    <!-- Template Javascript -->
-    <script src="js/main.1778597082179.js"></script>
-    
+            <div class="contact-details">
+                <p class="" style="cursor: text;"><strong>Email:</strong> info@florist.com</p>
+                <p class="" style="cursor: text;"><strong>Phone:</strong> 000 000 000</p>
+                <p class="" style="cursor: text;"><strong>Location:</strong> Cork, Ireland</p>
+            </div>
+        </div>
+
+        <form class="contact-form">
+            <input type="text" placeholder="Your Name" required="">
+            <input type="email" placeholder="Your Email" required="">
+            <textarea placeholder="Your Message" required=""></textarea>
+            <button type="submit">Send Message</button>
+        </form>
+
+    </div>
+</div>
 
 
 
-<div id="editor-shadow-host" style="all: initial;"></div><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><iframe name="__privateStripeController3471" frameborder="0" allowtransparency="true" scrolling="no" role="presentation" allow="payment *" src="https://js.stripe.com/v3/controller-with-preconnect-fe1b5872db1b41d1726b0a0042480234.html#__shared_params__[version]=dahlia&amp;__shared_params__[light_experiment_assignments]=%7B%22token%22%3A%2273be7fcd-ad0e-4c36-9448-c8a1cc22c541%22%2C%22assignments%22%3A%7B%22link_ewcs_prewarm_experiment_v2%22%3A%22treatment%22%7D%7D&amp;apiKey=pk_test_51SmbYSRqySo1SbUl9zUatOFdeP2eN1jYSDT4gNWFjzDaPLMF4QaeXONAJ9Ii2QVz7Bugnhp11UFCCFyg625JGGGu00uMAvRXJq&amp;apiVersion=2026-03-25.dahlia&amp;stripeJsId=73be7fcd-ad0e-4c36-9448-c8a1cc22c541&amp;stripeObjId=sobj-e6771f1d-3ca9-409c-a16d-ebc582ce3988&amp;firstStripeInstanceCreatedLatency=86&amp;controllerCount=1&amp;isCheckout=false&amp;stripeJsLoadTime=1778597070492&amp;manualBrowserDeprecationRollout=false&amp;mids[guid]=NA&amp;mids[muid]=0609f274-4239-4ea7-a0ea-780b651ee8a4d54027&amp;mids[sid]=NA&amp;referrer=https%3A%2F%2Fwww.ideago.ie%2FGym%2Findex.html&amp;controllerId=__privateStripeController3471" aria-hidden="true" tabindex="-1" style="border-width: medium !important; border-style: none !important; border-color: currentcolor !important; border-image: initial !important; margin: 0px !important; padding: 0px !important; width: 1px !important; min-width: 100% !important; overflow: hidden !important; display: block !important; visibility: hidden !important; position: fixed !important; height: 1px !important; pointer-events: none !important; user-select: none !important;"></iframe><iframe name="__privateStripeMetricsController3470" frameborder="0" allowtransparency="true" scrolling="no" role="presentation" allow="payment *" src="https://js.stripe.com/v3/m-outer-3437aaddcdf6922d623e172c2d6f9278.html#url=https%3A%2F%2Fwww.ideago.ie%2FGym%2Findex.html&amp;title=Gymnast%20-%20Gym%20Website%20Template&amp;referrer=android-app%3A%2F%2Fcom.google.android.googlequicksearchbox%2F&amp;muid=0609f274-4239-4ea7-a0ea-780b651ee8a4d54027&amp;sid=NA&amp;version=6&amp;preview=false&amp;__shared_params__[version]=dahlia" aria-hidden="true" tabindex="-1" style="border-width: medium !important; border-style: none !important; border-color: currentcolor !important; border-image: initial !important; margin: 0px !important; padding: 0px !important; width: 1px !important; min-width: 100% !important; overflow: hidden !important; display: block !important; visibility: hidden !important; position: fixed !important; height: 1px !important; pointer-events: none !important; user-select: none !important;"></iframe></body></html>
+
+
+<script>
+
+/* -------------------- NAV CAROUSEL -------------------- */
+
+const slides = document.querySelectorAll(".slide");
+const leftArrow = document.querySelector(".left-arrow");
+const rightArrow = document.querySelector(".right-arrow");
+
+let index = 0;
+let autoRotate;
+
+function showSlide(i){
+    slides.forEach(s => s.classList.remove("active"));
+    slides[i].classList.add("active");
+}
+
+function nextSlide(){
+    index = (index + 1) % slides.length;
+    showSlide(index);
+}
+
+function prevSlide(){
+    index = (index - 1 + slides.length) % slides.length;
+    showSlide(index);
+}
+
+function startAuto(){
+    autoRotate = setInterval(nextSlide, 3000);
+}
+
+function stopAuto(){
+    clearInterval(autoRotate);
+}
+
+showSlide(index);
+startAuto();
+
+rightArrow.addEventListener("click", () => { stopAuto(); nextSlide(); });
+leftArrow.addEventListener("click", () => { stopAuto(); prevSlide(); });
+
+/* -------------------- ABOUT CAROUSEL -------------------- */
+
+const aboutTabs = document.querySelectorAll(".about-tab");
+const aboutLeft = document.querySelector(".about-left");
+const aboutRight = document.querySelector(".about-right");
+
+let aboutIndex = 0;
+let aboutAuto;
+
+function showAbout(i){
+    aboutTabs.forEach(t => t.classList.remove("active"));
+    aboutTabs[i].classList.add("active");
+}
+
+function nextAbout(){
+    aboutIndex = (aboutIndex + 1) % aboutTabs.length;
+    showAbout(aboutIndex);
+}
+
+function prevAbout(){
+    aboutIndex = (aboutIndex - 1 + aboutTabs.length) % aboutTabs.length;
+    showAbout(aboutIndex);
+}
+
+function startAboutAuto(){
+    aboutAuto = setInterval(nextAbout, 3000);
+}
+
+function stopAboutAuto(){
+    clearInterval(aboutAuto);
+}
+
+showAbout(aboutIndex);
+startAboutAuto();
+
+aboutRight.addEventListener("click", () => { stopAboutAuto(); nextAbout(); });
+aboutLeft.addEventListener("click", () => { stopAboutAuto(); prevAbout(); });
+
+</script>
+
+
+
+
+<div id="editor-shadow-host" style="all: initial;"></div><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><input type="file" accept="image/*" style="display: none;"><iframe name="__privateStripeController0501" frameborder="0" allowtransparency="true" scrolling="no" role="presentation" allow="payment *" src="https://js.stripe.com/v3/controller-with-preconnect-fe1b5872db1b41d1726b0a0042480234.html#__shared_params__[version]=dahlia&amp;__shared_params__[light_experiment_assignments]=%7B%22token%22%3A%225f90f9e0-a700-44f4-ac8e-92e6544cd012%22%2C%22assignments%22%3A%7B%22link_ewcs_prewarm_experiment_v2%22%3A%22treatment%22%7D%7D&amp;apiKey=pk_test_51SmbYSRqySo1SbUl9zUatOFdeP2eN1jYSDT4gNWFjzDaPLMF4QaeXONAJ9Ii2QVz7Bugnhp11UFCCFyg625JGGGu00uMAvRXJq&amp;apiVersion=2026-03-25.dahlia&amp;stripeJsId=5f90f9e0-a700-44f4-ac8e-92e6544cd012&amp;stripeObjId=sobj-f34eea68-f958-4966-99f8-8f2212686265&amp;firstStripeInstanceCreatedLatency=108&amp;controllerCount=1&amp;isCheckout=false&amp;stripeJsLoadTime=1778597603835&amp;manualBrowserDeprecationRollout=false&amp;mids[guid]=NA&amp;mids[muid]=0609f274-4239-4ea7-a0ea-780b651ee8a4d54027&amp;mids[sid]=6d07c44d-0940-4586-b2bb-0d7853ffadaec6df3a&amp;referrer=https%3A%2F%2Fwww.ideago.ie%2Fflorist%2Fflorist.html&amp;controllerId=__privateStripeController0501" aria-hidden="true" tabindex="-1" style="border-width: medium !important; border-style: none !important; border-color: currentcolor !important; border-image: initial !important; margin: 0px !important; padding: 0px !important; width: 1px !important; min-width: 100% !important; overflow: hidden !important; display: block !important; visibility: hidden !important; position: fixed !important; height: 1px !important; pointer-events: none !important; user-select: none !important;"></iframe><iframe name="__privateStripeMetricsController0500" frameborder="0" allowtransparency="true" scrolling="no" role="presentation" allow="payment *" src="https://js.stripe.com/v3/m-outer-3437aaddcdf6922d623e172c2d6f9278.html#url=https%3A%2F%2Fwww.ideago.ie%2Fflorist%2Fflorist.html&amp;title=Luxury%20Florist&amp;referrer=android-app%3A%2F%2Fcom.google.android.googlequicksearchbox%2F&amp;muid=0609f274-4239-4ea7-a0ea-780b651ee8a4d54027&amp;sid=6d07c44d-0940-4586-b2bb-0d7853ffadaec6df3a&amp;version=6&amp;preview=false&amp;__shared_params__[version]=dahlia" aria-hidden="true" tabindex="-1" style="border-width: medium !important; border-style: none !important; border-color: currentcolor !important; border-image: initial !important; margin: 0px !important; padding: 0px !important; width: 1px !important; min-width: 100% !important; overflow: hidden !important; display: block !important; visibility: hidden !important; position: fixed !important; height: 1px !important; pointer-events: none !important; user-select: none !important;"></iframe></body></html>

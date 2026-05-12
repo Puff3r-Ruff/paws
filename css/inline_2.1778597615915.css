@@ -1,0 +1,103 @@
+
+.templateNav-wrapper {
+  position: relative;
+  background: #eee;
+  padding: 1rem;
+}
+
+/* DESKTOP LAYOUT */
+.template-list {
+  display: flex;
+  gap: 25px;
+  justify-content: center;
+}
+
+.template-card {
+  width: 300px;
+  background: #222;
+  border-radius: 14px;
+  padding: 14px;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+  transition: transform .4s ease, box-shadow .4s ease, opacity .4s ease;
+  opacity: 0.6;
+}
+
+.template-card.active {
+  transform: scale(1.05);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+  opacity: 1;
+}
+
+.template-card img {
+  width: 100%;
+  height: 272px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.price {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 8px 0;
+  color: #4ade80;
+}
+
+.btn {
+  display: inline-block;
+  padding: 8px 14px;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: .85rem;
+}
+
+/* MOBILE MODE */
+@media (max-width: 600px) {
+  .template-list {
+    display: block;
+    position: relative;
+    height: 500px;
+    overflow: hidden;
+  }
+
+  .template-card {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 90%;
+    transform: translateX(-50%);
+    opacity: 0;
+  }
+
+  .template-card.active {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.02);
+  }
+
+  /* RENAMED ARROWS */
+  .templateNav-arrow {
+    display: block;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    font-size: 26px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 10;
+  }
+
+  .templateNav-left { left: 10px; }
+  .templateNav-right { right: 10px; }
+}
+
+/* HIDE ARROWS ON DESKTOP */
+@media (min-width: 601px) {
+  .templateNav-arrow { display: none; }
+}
