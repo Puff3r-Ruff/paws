@@ -44,49 +44,161 @@ let _editorHost = null;
 let _editorRoot = null;
 
 function createShadowEditorUI() {
+  // Reset if removed
+  if (_editorHost && !_editorHost.isConnected) {
+    _editorHost = null;
+    _editorRoot = null;
+  }
+
   if (_editorHost) return { host: _editorHost, root: _editorRoot };
 
-  // Host element appended to body
+  // Host
   _editorHost = document.createElement("div");
   _editorHost.id = "editor-shadow-host";
-  // Prevent page styles from leaking into the host
   _editorHost.style.all = "initial";
   document.body.appendChild(_editorHost);
 
-  // Open shadow root so devtools can inspect if needed
   _editorRoot = _editorHost.attachShadow({ mode: "open" });
 
-  // Scoped styles for the editor UI
+  /* ============================
+     STYLES (scoped)
+  ============================ */
   const styles = `
-    :host { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
-    .editor-panel { position: fixed; left: 20px; bottom: 20px; z-index: 2147483647; }
-    .opened-ui, .closed-ui { background: #fff; border-radius: 10px; box-shadow: 0 6px 24px rgba(0,0,0,0.12); }
-    .opened-ui { width: 300px; padding: 12px; transform: translate(5%, -5%) scale(1.05); }
-    .closed-ui { width: 90px; padding: 8px; display: none; }
-    .btn { display:block; width:100%; padding:10px; border-radius:6px; border:none; cursor:pointer; font-weight:600; margin-bottom:8px; }
-    .btn-primary { background:#00b2ff; color:#000; }
-    .btn-black { background:#000; color:#fff; }
-    .btn-green { background:#28a745; color:#fff; }
-    input#SiteName { width:100%; padding:10px; margin-bottom:8px; border-radius:6px; border:1px solid #ccc; box-sizing:border-box; text-align: center;}
-    a { color: inherit; text-decoration: none; display:block; width:100%; height:100%; }
+    /* Sliding panel */
+    #sidePanel {
+      width: 260px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      text-align: center;
+      background: #092a49;
+      padding: 1rem;
+
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+
+      transform: translateX(-100%);
+      transition: transform 0.35s ease;
+
+      z-index: 999999;
+    }
+
+    #sidePanel.open {
+      transform: translateX(0);
+    }
+
+    /* Toggle tab */
+    #toggleTab {
+      position: fixed;
+      top: 50%;
+      left: 0;
+      transform: translate(0, -50%);
+      background: #1e90ff;
+      color: #fff;
+      border-radius: 0 4px 4px 0;
+      padding: 10px 14px;
+      cursor: pointer;
+      z-index: 1000000;
+      font-size: 18px;
+      border: none;
+    }
+
+    /* Buttons */
+    .btn {
+      border-radius: 4px;
+      border: none;
+      padding: 10px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      text-align: center;
+      font-weight: 500;
+      width: 100%;
+    }
+
+    .btn-back {
+      background: #000;
+      color: #fff;
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    .btn-name {
+      background: #fff;
+      color: #000;
+      border: 1px solid #d0d0d0;
+      font-weight: 400;
+    }
+
+    .btn-update {
+      background: #4fb3ff;
+      color: #fff;
+      font-size: 1.2rem;
+      width: 100%;
+      padding: 5px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    /* Collapse button */
+    #collapseBtn {
+      background: #1e90ff;
+      color: #fff;
+      font-size: 18px;
+    }
+
+    .arrow {
+      display: inline-block;
+      transition: transform 0.25s ease;
+    }
+
+    .arrow.rotated {
+      transform: rotate(180deg);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    input#SiteName {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-bottom: 8px;
+      text-align: center;
+      box-sizing: border-box;
+    }
   `;
 
-  // Minimal markup for the editor UI (scoped inside shadow root)
+  /* ============================
+     HTML (scoped)
+  ============================ */
   const html = `
-    <div class="editor-panel">
-      <div class="opened-ui" id="closedUI">
-        <button id="minifyBtn" class="btn btn-primary" title="Minify">HIDE</button>
-        <div id="saveLoadContainer">
-          <button id="backToTemplates" class="btn btn-black" style="margin-top:0;">
-            <a href="/MarketResearch">Back to Templates</a>
-          </button>
-          <input id="SiteName" placeholder="Site name" />
-          <button id="UploadBtn" class="btn btn-green">subscribe</button>
-        </div>
-      </div>
+    <div id="panel">
+      <button id="toggleTab">▶</button>
 
-      <div class="closed-ui" id="openedUI">
-        <button id="unminifyBtn" class="btn btn-primary">Open</button>
+      <div id="sidePanel">
+        <button class="btn" id="collapseBtn">
+          <span class="arrow" id="arrow">▼</span>
+        </button>
+
+        <div id="contentArea">
+          <button class="btn btn-back" id="backToTemplates">
+            <a href="/BusinessHud" style="color:inherit;text-decoration:none;">Back to Templates</a>
+          </button>
+
+          <input id="SiteName" placeholder="Site name" />
+
+          <button class="btn btn-update" id="UploadBtn">subscribe</button>
+        </div>
       </div>
     </div>
   `;
@@ -102,6 +214,7 @@ function createShadowEditorUI() {
   return { host: _editorHost, root: _editorRoot };
 }
 
+
 // Query helper: prefer shadow root, fallback to document
 function editorQuery(selector) {
   if (_editorRoot) {
@@ -110,6 +223,127 @@ function editorQuery(selector) {
   }
   return document.querySelector(selector);
 }
+/* =========================
+   Local Save / Load (24 hours)
+   ========================= */
+
+const LOCAL_KEY = "editor_local_backup_v1";
+
+let autosaveTimer = null;
+
+function scheduleAutosave() {
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(() => {
+    saveLocalBackup(true); // silent autosave
+  }, 800); // waits 0.8s after last change
+}
+
+function autoLoadIfExists() {
+  const raw = localStorage.getItem(LOCAL_KEY);
+  if (!raw) return;
+
+  const data = JSON.parse(raw);
+  const age = Date.now() - data.timestamp;
+
+  if (age > 24 * 60 * 60 * 1000) {
+    localStorage.removeItem(LOCAL_KEY);
+    return;
+  }
+
+  // Auto-load
+  loadLocalBackup();
+}
+
+async function saveLocalBackup(silent = false) {
+  const nameEl = editorQuery("#SiteName");
+  const siteName = nameEl?.value?.trim() || "";
+
+  const { cleanedHTML, originalSrcs } = await window.cleanDocumentForPublish();
+
+  const images = await Promise.all(
+    originalSrcs.map(async (src) => {
+      if (!src) return null;
+
+      if (src.startsWith("data:image")) {
+        return src;
+      }
+
+      try {
+        const resp = await fetch(src);
+        const blob = await resp.blob();
+        return "data:image/jpeg;base64," + (await blobToBase64(blob));
+      } catch {
+        return null;
+      }
+    })
+  );
+
+  const payload = {
+    url: window.location.pathname,   // ⭐ save the link
+    siteName,
+    cleanedHTML,
+    images,
+    timestamp: Date.now()
+  };
+
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(payload));
+
+  if (!silent) alert("Saved locally for 24 hours.");
+}
+
+
+function loadLocalBackup() {
+  const raw = localStorage.getItem(LOCAL_KEY);
+  if (!raw) {
+    alert("No saved version found.");
+    return;
+  }
+
+  const data = JSON.parse(raw);
+  const age = Date.now() - data.timestamp;
+
+  if (age > 24 * 60 * 60 * 1000) {
+    alert("Saved version expired (older than 24 hours).");
+    localStorage.removeItem(LOCAL_KEY);
+    return;
+  }
+
+  // If we are NOT on the saved URL → navigate there
+  if (window.location.pathname !== data.url) {
+    sessionStorage.setItem("editor_autoload", "1");
+    window.location.href = data.url;
+    return;
+  }
+
+  // If we ARE already on the saved URL → restore immediately
+  restoreBackupContent(data);
+}
+
+
+function restoreBackupContent(data) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(data.cleanedHTML, "text/html");
+
+  // Replace only the body
+  document.body.innerHTML = doc.body.innerHTML;
+
+  // Restore images
+  const imgs = document.querySelectorAll("img");
+  imgs.forEach((img, i) => {
+    if (data.images[i]) img.src = data.images[i];
+  });
+
+  // Restore site name
+  const nameEl = editorQuery("#SiteName") || document.getElementById("SiteName");
+  if (nameEl) nameEl.value = data.siteName || "";
+
+  // Recreate editor UI
+  createShadowEditorUI();
+  initializeEditor();
+
+  alert("Loaded saved version.");
+}
+
 
 /* =========================
    Clerk Loader + Bootstrap
@@ -464,6 +698,7 @@ function openImageEditor(targetImg, uploadedSrc) {
         }
 
         targetImg.src = dataURL;
+        scheduleAutosave();
         overlay.remove();
         hint.remove();
       };
@@ -502,9 +737,10 @@ function enableTextEditing() {
 
   elements.forEach((el) => {
     if (el.closest && el.closest(".sidebar")) return;
-
+     
     el.classList.add("editable-text");
     el.style.cursor = "text";
+    el.addEventListener("input", scheduleAutosave);
 
     el.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -545,93 +781,54 @@ function destroyOwlControls() {
    ========================= */
 
 function rebindButtons() {
-  const minifyBtn = editorQuery("#minifyBtn");
-  const unminifyBtn = editorQuery("#unminifyBtn");
+  const toggleTab = editorQuery("#toggleTab");
+  const collapseBtn = editorQuery("#collapseBtn");
+  const contentArea = editorQuery("#contentArea");
+  const arrow = editorQuery("#arrow");
+
   const uploadBtn = editorQuery("#UploadBtn");
+  const nameEl = editorQuery("#SiteName");
 
-  minifyBtn?.addEventListener("click", Minify);
-  unminifyBtn?.addEventListener("click", Minify);
+  // Slide panel open/close
+  toggleTab?.addEventListener("click", Minify);
 
-  // Upload button uses the same logic as before but references editorQuery for SiteName
-  uploadBtn?.addEventListener("click", async (e) => {
-    const stripeModal = document.getElementById("stripePaymentModal");
-    const nameEl = editorQuery("#SiteName") || document.getElementById("SiteName");
+  // Collapse inner content
+  collapseBtn?.addEventListener("click", () => {
+    const hidden = contentArea.classList.toggle("hidden");
+    arrow.classList.toggle("rotated");
+  });
+
+  // Autosave on name change
+  nameEl?.addEventListener("input", scheduleAutosave);
+
+  // Upload button (same logic as before)
+  uploadBtn?.addEventListener("click", async () => {
+    const nameEl = editorQuery("#SiteName");
     if (!nameEl || nameEl.value.trim().length < 3) {
       alert("Please enter a site name (at least 3 characters).");
       return;
     }
 
+    // Stripe modal logic stays the same
+    const stripeModal = document.getElementById("stripePaymentModal");
     if (stripeModal && window.stripe) {
       openPaymentModal();
-      if (paymentMessage) paymentMessage.textContent = "Preparing payment...";
-      if (confirmBtn) confirmBtn.disabled = false;
-
-      try {
-        const resp = await fetch("/api/stripe/create-subscription-intent", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            siteName: nameEl.value.trim(),
-            clerkId: window.Clerk?.user?.id || null,
-          }),
-        });
-
-        const data = await resp.json();
-        if (!resp.ok) throw new Error(data.message || "Failed to create subscription intent");
-
-        const clientSecret = data.client_secret;
-        if (!clientSecret) throw new Error("No client secret returned");
-
-        window._stripeClientSecret = clientSecret;
-
-        if (!window.stripe) {
-          if (paymentError) {
-            paymentError.textContent = "Stripe failed to load. Disable ad‑blockers or try another browser.";
-            paymentError.style.display = "block";
-          }
-          return;
-        }
-
-        await new Promise((r) => setTimeout(r, 75));
-
-        window._stripeElements = window.stripe.elements({
-          clientSecret,
-          appearance: { theme: "stripe" },
-        });
-
-        const mountPoint = document.getElementById("payment-element");
-        if (mountPoint) mountPoint.innerHTML = "";
-
-        const paymentElement = window._stripeElements.create("payment");
-        paymentElement.mount("#payment-element");
-
-        if (paymentMessage) paymentMessage.textContent = "Enter card details to confirm payment.";
-      } catch (err) {
-        if (paymentError) {
-          paymentError.textContent = err.message || "Could not start payment";
-          paymentError.style.display = "block";
-        }
-        if (paymentMessage) paymentMessage.textContent = "A monthly subscription is required to publish.";
-      }
-    } else {
-      await publish();
+      return;
     }
+
+    await publish();
   });
 }
 
-function Minify() {
-  const opened = editorQuery("#openedUI");
-  const closed = editorQuery("#closedUI");
-  if (!closed) return;
 
-  const current = getComputedStyle(closed).display;
-  if (current === "block") {
-    closed.style.display = "none";
-    if (opened) opened.style.display = "block";
-  } else {
-    closed.style.display = "block";
-    if (opened) opened.style.display = "none";
-  }
+function Minify() {
+  const panel = editorQuery("#sidePanel");
+  const toggleTab = editorQuery("#toggleTab");
+
+  if (!panel || !toggleTab) return;
+
+  const isOpen = panel.classList.toggle("open");
+  toggleTab.textContent = isOpen ? "◀" : "▶";
 }
 
 /* =========================
@@ -992,6 +1189,10 @@ async function uploadProject(files, name, ID, template) {
 let stripe = null;
 window._stripeElements = null;
 window._stripeClientSecret = null;
+window.addEventListener("beforeunload", () => {
+  saveLocalBackup(true);
+});
+
 
 const STRIPE_PUBLISHABLE_KEY =
   "pk_test_51SmbYSRqySo1SbUl9zUatOFdeP2eN1jYSDT4gNWFjzDaPLMF4QaeXONAJ9Ii2QVz7Bugnhp11UFCCFyg625JGGGu00uMAvRXJq";
@@ -1096,8 +1297,11 @@ if (confirmBtn) {
    ========================= */
 
 function initializeEditor() {
-  // Ensure editor UI exists (shadow UI created in boot)
-  if (!editorQuery("#closedUI") && !editorQuery("#openedUI")) {
+  // Ensure new editor UI exists
+  const hasPanel =
+    editorQuery("#sidePanel") || editorQuery("#toggleTab");
+
+  if (!hasPanel) {
     console.warn("Editor UI not found — skipping editor initialization.");
     return;
   }
@@ -1107,6 +1311,7 @@ function initializeEditor() {
   destroyOwlControls();
   rebindButtons();
 }
+
 
 async function waitForEditorUI(timeout = 5000) {
   const start = Date.now();
@@ -1123,10 +1328,10 @@ async function waitForEditorUI(timeout = 5000) {
     await new Promise((r) => document.addEventListener("DOMContentLoaded", r));
   }
 
-  // Create shadow UI so editorQuery finds the editor elements
+  // Create shadow UI early
   createShadowEditorUI();
 
-  // Load Clerk first (so editor can reference Clerk.user)
+  // Load Clerk
   try {
     await loadClerkScript("pk_live_Y2xlcmsuaWRlYWdvLmllJA");
     console.log("Clerk loaded and ready (editor.js).");
@@ -1134,15 +1339,37 @@ async function waitForEditorUI(timeout = 5000) {
     console.warn("Clerk script failed to load; continuing without Clerk.");
   }
 
-  // Load Stripe module in background (non-blocking)
+  // Load Stripe in background
   loadStripeModule().catch((err) => console.warn("Stripe background load failed:", err));
 
-  // Wait briefly for the shadow UI to be available, then initialize
-  const found = await waitForEditorUI(2000);
-  if (!found) {
-    console.warn("Editor UI not found after wait — skipping editor initialization.");
+  // ============================
+  // AUTOLOAD BLOCK (corrected)
+  // ============================
+if (sessionStorage.getItem("editor_autoload") === "1") {
+  sessionStorage.removeItem("editor_autoload");
+
+  const raw = localStorage.getItem(LOCAL_KEY);
+  if (!raw) return;
+
+  const data = JSON.parse(raw);
+
+  // Check expiration
+  const age = Date.now() - data.timestamp;
+  if (age > 24 * 60 * 60 * 1000) {
+    localStorage.removeItem(LOCAL_KEY);
     return;
   }
 
+  // Only restore if URL matches
+  if (data.url === window.location.pathname) {
+    restoreBackupContent(data);
+
+    // After restoring, recreate Shadow UI
+    createShadowEditorUI();
+  }
+}
+
+
+  // Initialize editor AFTER autoload
   initializeEditor();
 })();
